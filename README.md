@@ -1,2 +1,2 @@
-# ondemand-web
-Docker build file for an on-demand Civicrm + Drupal web server.
+# ondemand
+Docker compose file for an on-demand Civicrm + Drupal service.
