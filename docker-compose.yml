@@ -1,0 +1,72 @@
+version: '2'
+
+services:
+
+  vsql:
+    build: vsql
+    expose:
+           - "3306"
+#    restart: always
+    volumes:
+      - vdb:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: t00r
+      MYSQL_DATABASE: civicrm
+      MYSQL_USER: civicrm
+      MYSQL_PASSWORD: mrcivic
+    
+  vhttp:
+    # web server for a drupal + civicrm site
+    build: vhttp
+#    restart: always
+    # expose container's port 80 as configurable port
+    # todo - access directly on docker ip from varnish?
+    ports:
+      - "${VSITE_PORT}:80"
+    # provide all the (shared) php code as mounted volumes from the host
+    volumes:
+      - /var/www/drupal/git-7:/var/www/html:ro
+      - /var/www/civicrm/civicrm-${VSITE_CIVICRM_VER}:/var/www/html/sites/all/modules/civicrm:ro
+      - /var/www/drupal/7-modules:/var/www/html/sites/all/modules/contrib:ro
+      - vsite:/var/www/html/sites/${VSITE_DOMAIN}
+    links:
+      # access the virtual sql server as "db" in the /etc/hosts file
+      - "vsql:db"
+    environment:
+      VSITE_DOMAIN: ${VSITE_DOMAIN}
+      # USER: 99
+      # APACHE_RUN_USER=nobody
+    depends_on:
+      - vsql
+
+  install:
+    # create a new, empty site at this location.
+    # build a temporary super-set of the vhttp container above, run some scripts, and then exit.
+    # can be run independendently of the vhttp container.
+    build: install
+    # as above, provide all the (shared) php code as mounted volumes from the host
+    volumes:
+      - /var/www/drupal/git-7:/var/www/html:ro
+      - /var/www/civicrm/civicrm-${VSITE_CIVICRM_VER}:/var/www/html/sites/all/modules/civicrm:ro
+      - /var/www/drupal/7-modules:/var/www/html/sites/all/modules/contrib:ro
+      - vsite:/var/www/html/sites/${VSITE_DOMAIN}
+    links:
+      # access the virtual sql server as "db" in the /etc/hosts file
+      - "vsql:db"
+    environment:
+      #USER: 99
+      VSITE_PASS: ${VSITE_PASS}
+      VSITE_ADMIN: ${VSITE_ADMIN}
+      VSITE_NAME: ${VSITE_NAME}
+      VSITE_DOMAIN: ${VSITE_DOMAIN}
+      MYSQL_DATABASE: civicrm
+      MYSQL_USER: civicrm
+      MYSQL_PASSWORD: mrcivic
+      # MYSQL_ONETIME_PASSWORD
+
+    depends_on:
+      - vsql
+
+volumes:
+    vsite:
+    vdb:
