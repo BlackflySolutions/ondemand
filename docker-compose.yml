@@ -3,6 +3,7 @@ version: '2'
 services:
 
   vsql:
+
     build: vsql
     expose:
            - "3306"
@@ -19,16 +20,14 @@ services:
     # web server for a drupal + civicrm site
     build: vhttp
 #    restart: always
-    # expose container's port 80 as configurable port
-    # todo - access directly on docker ip from varnish?
-    ports:
-      - "${VSITE_PORT}:80"
+    expose:
+           - "80"
     # provide all the (shared) php code as mounted volumes from the host
     volumes:
       - /var/www/drupal/git-7:/var/www/html:ro
       - /var/www/civicrm/civicrm-${VSITE_CIVICRM_VER}:/var/www/html/sites/all/modules/civicrm:ro
       - /var/www/drupal/7-modules:/var/www/html/sites/all/modules/contrib:ro
-      - vsite:/var/www/html/sites/${VSITE_DOMAIN}
+      - vsite:/var/www/html/sites/default
     links:
       # access the virtual sql server as "db" in the /etc/hosts file
       - "vsql:db"
@@ -49,7 +48,7 @@ services:
       - /var/www/drupal/git-7:/var/www/html:ro
       - /var/www/civicrm/civicrm-${VSITE_CIVICRM_VER}:/var/www/html/sites/all/modules/civicrm:ro
       - /var/www/drupal/7-modules:/var/www/html/sites/all/modules/contrib:ro
-      - vsite:/var/www/html/sites/${VSITE_DOMAIN}
+      - vsite:/var/www/html/sites/default
     links:
       # access the virtual sql server as "db" in the /etc/hosts file
       - "vsql:db"
